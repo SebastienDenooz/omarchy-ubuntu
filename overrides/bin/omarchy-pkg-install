@@ -1,0 +1,10 @@
+#!/bin/bash
+# Ubuntu : menu Install > Package → recherche floue dans les paquets apt.
+fzf_args=(--multi --preview 'apt-cache show {1} 2>/dev/null | head -40' --preview-window 'down:65%:wrap'
+  --preview-label='tab : sélection multiple · entrée : installer' --color 'pointer:green,marker:green')
+pkg_names=$(apt-cache pkgnames | sort | fzf "${fzf_args[@]}")
+if [[ -n $pkg_names ]]; then
+  source omarchy-sudo-keepalive 2>/dev/null || true
+  echo "$pkg_names" | tr '\n' ' ' | xargs sudo apt-get install -y
+  omarchy-show-done
+fi

@@ -1,0 +1,21 @@
+#!/bin/bash
+# Ubuntu : configuration PAM de l'écran de verrouillage du shell Omarchy (services omarchy-lock-*).
+# La version Arch inclut « system-local-login » ; ici on s'appuie sur common-auth / common-account.
+set -e
+target_user=${OMARCHY_INSTALL_USER:-${SUDO_USER:-$USER}}
+as_root() { if (( EUID == 0 )); then "$@"; else sudo "$@"; fi; }
+echo "Configuring lock screen password authentication (Ubuntu PAM)..."
+as_root tee /etc/pam.d/omarchy-lock-password >/dev/null <<'PAM'
+auth       include    common-auth
+account    include    common-account
+PAM
+if [[ -x /usr/bin/fprintd-list ]] && /usr/bin/fprintd-list "$target_user" 2>/dev/null | grep -qi finger; then
+  echo "Configuring lock screen fingerprint authentication..."
+  as_root tee /etc/pam.d/omarchy-lock-fingerprint >/dev/null <<'PAM'
+auth       required   pam_fprintd.so
+account    include    common-account
+PAM
+else
+  as_root rm -f /etc/pam.d/omarchy-lock-fingerprint
+fi
+echo "Lock screen authentication configured."

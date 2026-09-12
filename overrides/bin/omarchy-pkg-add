@@ -1,0 +1,19 @@
+#!/bin/bash
+# Ubuntu : installe via apt (noms Arch traduits par ubuntu/pkgmap.txt).
+to_install=(); skipped=()
+for pkg in "$@"; do
+  for p in $(omarchy-ubuntu-pkgmap "$pkg"); do
+    if [[ $p == SKIP ]]; then skipped+=("$pkg"); continue; fi
+    dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q 'install ok installed' || to_install+=("$p")
+  done
+done
+if (( ${#to_install[@]} )); then
+  if (( EUID == 0 )); then apt-get install -y --no-install-recommends "${to_install[@]}" || exit 1
+  else sudo apt-get install -y --no-install-recommends "${to_install[@]}" || exit 1; fi
+fi
+if (( ${#skipped[@]} )); then
+  echo -e "\033[33momarchy-pkg-add (Ubuntu) : pas d'équivalent apt pour : ${skipped[*]}\033[0m" >&2
+  echo "Voir ~/omarchy-ubuntu/MATRICE.md pour la marche à suivre." >&2
+  exit 1
+fi
+exit 0

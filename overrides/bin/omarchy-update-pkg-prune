@@ -1,0 +1,3 @@
+#!/bin/bash
+# Ubuntu : sans objet (pacman / limine / plymouth Omarchy / AUR). No-op.
+exit 0

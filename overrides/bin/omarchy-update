@@ -1,0 +1,23 @@
+#!/bin/bash
+# Ubuntu : mise à jour = nouvelle release Omarchy (fusion git sur la branche ubuntu) + apt + mise + shell.
+set -e
+co=$(readlink -f "${OMARCHY_PATH:-/usr/share/omarchy}")
+echo -e "\e[32m\nOmarchy (Ubuntu) : vérification des releases\e[0m"
+git -C "$co" fetch --tags origin
+current=$(git -C "$co" describe --tags --abbrev=0)
+latest=$(git -C "$co" tag -l 'v*' --sort=-v:refname | head -1)
+if [[ -n $latest && $latest != "$current" ]]; then
+  echo "Nouvelle version : $current → $latest"
+  if [[ ${1:-} == "-y" ]] || gum confirm "Fusionner $latest dans la branche ubuntu ?"; then
+    git -C "$co" merge --no-edit "$latest" || { echo -e "\e[31mConflit de fusion : résous-le dans $co puis relance 'omarchy update'.\e[0m"; exit 1; }
+    omarchy-ubuntu-link-bins
+    echo "Pense à rejouer ~/omarchy-ubuntu/scripts/31-overrides.sh si des scripts ont changé côté Omarchy."
+  fi
+else
+  echo "Omarchy est à jour ($current)."
+fi
+echo -e "\e[32m\nMise à jour des paquets Ubuntu\e[0m"
+sudo apt-get update && sudo apt-get upgrade -y
+omarchy-hook post-update
+command -v omarchy-update-mise >/dev/null && omarchy-update-mise || true
+omarchy-update-restart

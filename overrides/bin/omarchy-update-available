@@ -1,0 +1,11 @@
+#!/bin/bash
+# Ubuntu : signale une nouvelle release Omarchy (tag git) et les mises à jour apt en attente.
+set -uo pipefail
+co=$(readlink -f "${OMARCHY_PATH:-/usr/share/omarchy}")
+GIT_TERMINAL_PROMPT=0 timeout 10 git -C "$co" fetch --quiet --tags origin 2>/dev/null || true
+current=$(git -C "$co" describe --tags --abbrev=0 2>/dev/null)
+latest=$(git -C "$co" tag -l 'v*' --sort=-v:refname | head -1)
+[[ -n $latest && $latest != "$current" ]] && echo "omarchy $latest (installé : $current)"
+n=$(apt list --upgradable 2>/dev/null | grep -c '/' || true)
+(( n > 0 )) && echo "apt: $n paquet(s) à mettre à jour"
+exit 0

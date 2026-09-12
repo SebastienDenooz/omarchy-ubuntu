@@ -1,0 +1,12 @@
+-- Apparence (kit omarchy-ubuntu). Les valeurs Omarchy s'appliquent (gaps 5/10, bordure 2, coins carrés,
+-- pas de flou ni d'ombre, dwindle). Décommente pour ajuster.
+
+-- hl.config({
+--   decoration = {
+--     rounding = 8,               -- coins arrondis (ta config précédente)
+--   },
+--   general = {
+--     gaps_in = 4, gaps_out = 8,  -- tes anciens écarts
+--     -- layout = "scrolling",    -- disposition façon niri
+--   },
+-- })

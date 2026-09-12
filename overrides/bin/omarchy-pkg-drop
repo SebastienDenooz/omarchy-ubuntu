@@ -1,0 +1,8 @@
+#!/bin/bash
+# Ubuntu : désinstalle via apt les paquets présents.
+rm=()
+for p in $(omarchy-ubuntu-pkgmap "$@"); do
+  [[ $p == SKIP ]] && continue
+  dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q 'install ok installed' && rm+=("$p")
+done
+(( ${#rm[@]} == 0 )) || sudo apt-get remove -y "${rm[@]}"

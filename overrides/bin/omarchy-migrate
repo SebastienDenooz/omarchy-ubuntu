@@ -1,0 +1,3 @@
+#!/bin/bash
+# Ubuntu : les migrations Omarchy sont écrites pour Arch (pacman, limine, snapper). Désactivées.
+exit 0

@@ -1,0 +1,10 @@
+#!/bin/bash
+# Ubuntu : menu Remove > Package → paquets installés manuellement.
+fzf_args=(--multi --preview 'apt-cache show {1} 2>/dev/null | head -40' --preview-window 'down:65%:wrap'
+  --preview-label='tab : sélection multiple · entrée : supprimer' --color 'pointer:red,marker:red')
+pkg_names=$(apt-mark showmanual | sort | fzf "${fzf_args[@]}")
+if [[ -n $pkg_names ]]; then
+  echo "$pkg_names" | tr '\n' ' ' | xargs sudo apt-get remove --purge -y
+  sudo apt-get autoremove -y
+  omarchy-show-done
+fi

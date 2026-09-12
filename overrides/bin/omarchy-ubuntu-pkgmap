@@ -1,0 +1,8 @@
+#!/bin/bash
+# Traduit des noms de paquets Arch en paquets apt via $OMARCHY_PATH/ubuntu/pkgmap.txt.
+# Sortie : un nom apt par ligne ; "SKIP" si aucun équivalent ; le nom inchangé sinon.
+map="${OMARCHY_PATH:-/usr/share/omarchy}/ubuntu/pkgmap.txt"
+for pkg in "$@"; do
+  m=$(grep -m1 "^$pkg=" "$map" 2>/dev/null | cut -d= -f2-)
+  if [[ -z $m ]]; then echo "$pkg"; else for x in $m; do echo "$x"; done; fi
+done
