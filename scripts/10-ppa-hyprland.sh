@@ -1,8 +1,9 @@
 #!/bin/bash
-# Step 10 — Hyprland 0.56.2 stack from the cppiber/hyprland PPA (Ubuntu 26.04 "resolute").
+# Step 10 — Hyprland 0.56.2 stack from the cppiber/hyprland PPA (publishes for 26.04 "resolute" and later).
 # Replaces the Hyprland 0.53.3 shipped by Ubuntu. Revert with: sudo ppa-purge ppa:cppiber/hyprland
 . "$(dirname "$0")/lib.sh"
 need sudo apt-get
+require_ubuntu
 
 say "Adding the cppiber/hyprland PPA"
 if grep -rqs 'cppiber/hyprland' /etc/apt/sources.list.d/; then

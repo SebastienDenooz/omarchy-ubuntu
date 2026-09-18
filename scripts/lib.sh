@@ -53,6 +53,38 @@ omarchy_env() { # load OMARCHY_PATH and PATH the way an Omarchy session does
   export PATH="$OMARCHY_PATH/bin:$PATH"
 }
 
+os_release() { # os_release KEY
+  [[ -r /etc/os-release ]] && ( . /etc/os-release; printf '%s' "${!1:-}" )
+}
+
+require_ubuntu() { # the stack needs what only 26.04 LTS and later ship
+  local id version
+  id=$(os_release ID); version=$(os_release VERSION_ID)
+  [[ $id == ubuntu ]] || die "this kit targets Ubuntu (found: ${id:-unknown}); on Arch, install Omarchy itself"
+  # Hyprland 0.56 requires Lua 5.5 and the Omarchy shell a recent Qt 6: Ubuntu 24.04 LTS has neither
+  # (no lua5.5, Qt 6.4), so 26.04 LTS is the floor.
+  awk -v v="${version:-0}" 'BEGIN { split(v, a, "."); exit !(a[1] > 26 || (a[1] == 26 && a[2] >= 4)) }' ||
+    die "Ubuntu $version is too old: this kit needs 26.04 LTS or later (Lua 5.5 and Qt 6.10)"
+}
+
+apply_machine_profiles() { # copy hypr/machines/<machine>/*.lua when the DMI identity matches
+  local dir name pattern applied=0
+  for dir in "$KIT_DIR"/hypr/machines/*/; do
+    [[ -f $dir/match ]] || continue
+    name=$(basename "$dir")
+    while read -r pattern; do
+      [[ -z $pattern || $pattern == \#* ]] && continue
+      if grep -qi "$pattern" /sys/class/dmi/id/product_name /sys/class/dmi/id/product_family 2>/dev/null; then
+        install -m644 "$dir"/*.lua "$HOME/.config/hypr/"
+        ok "machine profile applied: $name ($pattern)"
+        applied=1
+        break
+      fi
+    done < "$dir/match"
+  done
+  (( applied )) || info "no machine profile matches this hardware, generic monitor settings kept"
+}
+
 rust_ready() { # Ubuntu's rustup package ships proxies but no toolchain: ensure a stable toolchain exists
   command -v rustup >/dev/null 2>&1 || { cargo --version >/dev/null 2>&1; return; }
   rustup toolchain list 2>/dev/null | grep -q '^stable' || rustup toolchain install stable --profile minimal >/dev/null 2>&1 || return 1

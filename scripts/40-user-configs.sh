@@ -21,9 +21,10 @@ say "Copying $OMARCHY_SYS/config → ~/.config"
   done )
 ok "Omarchy configs in place (hypr, foot, alacritty, ghostty, kitty, btop, tmux, starship, lazygit, omarchy, fcitx5, imv…)"
 
-say "Hyprland overrides for this machine (Belgian AZERTY, monitors, touchpad)"
+say "Hyprland overrides (generic: layout and monitors follow the system)"
 install -m644 "$KIT_DIR"/hypr/*.lua "$HOME/.config/hypr/"
 ok "monitors.lua input.lua bindings.lua looknfeel.lua autostart.lua"
+apply_machine_profiles
 
 say "Theme templates adapted to Ubuntu"
 # foot 1.25 (Ubuntu) does not know [colors-dark]/[colors-light] (foot ≥ 1.26): user template takes priority.

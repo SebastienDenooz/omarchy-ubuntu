@@ -18,7 +18,14 @@ it. The full analysis is in `REPORT.md`, the package-by-package detail in `MATRI
   from their official binaries or built under `~/.local`.
 - Your current Hyprland config is backed up into `backups/`; `90-rollback.sh` restores it.
 
-## One-shot install (fresh Ubuntu 26.04)
+## Requirements
+
+Ubuntu **26.04 LTS or later**, on amd64. The floor is not arbitrary: Hyprland 0.56 requires Lua 5.5 and
+the Omarchy shell a recent Qt 6, and 24.04 LTS has neither (no `lua5.5`, Qt 6.4.2). The scripts check the
+release and stop early on anything older. Nothing else is assumed: the keyboard layout, the OCR language
+and the monitors all follow the system.
+
+## One-shot install (fresh Ubuntu 26.04 LTS or later)
 
 ```
 git clone <this kit> ~/omarchy-ubuntu && cd ~/omarchy-ubuntu
@@ -72,6 +79,24 @@ PPAs to the theme rendering, runs for real.
 
 ## After the installation
 
+### Machine-specific settings
+
+The kit ships generic defaults: every monitor uses its preferred mode, the keyboard layout comes from
+`/etc/default/keyboard`, and the AZERTY keycode fixes are added only when that layout is `be` or `fr`.
+
+Fixed monitor layouts live in `hypr/machines/<machine>/`, applied by step 40 only when the DMI identity
+matches the patterns in that directory's `match` file. `hypr/machines/lenovo-thinkpad-p14s-gen5/` is the
+example that ships with the kit. To add your own:
+
+```
+mkdir -p hypr/machines/my-laptop
+echo "XPS 13 9350" > hypr/machines/my-laptop/match      # matched against product_name / product_family
+$EDITOR hypr/machines/my-laptop/monitors.lua            # hl.monitor / hl.workspace_rule rules
+```
+
+For layouts that should follow whatever you plug in, use hyprmoncfg (step 55) instead: it stores a
+profile per setup and applies it on hotplug, lid and resume.
+
 - `SUPER + Space` opens the Omarchy menu, `SUPER + K` lists the keybindings.
 - `omarchy` in a terminal gives the full CLI; `omarchy update` merges the next release and runs
   `apt upgrade`.
@@ -109,7 +134,8 @@ scripts/             steps 00 → 90 (+ shared lib.sh)
 test/docker-test.sh  clean-container test of install.sh
 overrides/bin/       28 omarchy-* scripts rewritten for apt / no-op, plus the Ubuntu lock-screen PAM
 overrides/pkgmap.txt Arch → apt package name map
-hypr/                monitors, input, bindings (AZERTY fixes), looknfeel, autostart for this machine
+hypr/                generic monitors, input, bindings, looknfeel, autostart
+hypr/machines/       fixed layouts applied when the machine's DMI identity matches
 themed/              theme templates adapted to Ubuntu (foot 1.25)
 dl/ build/ logs/     downloads, builds, logs (created on use)
 backups/             your replaced configs, timestamped

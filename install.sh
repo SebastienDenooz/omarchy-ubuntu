@@ -1,5 +1,5 @@
 #!/bin/bash
-# Omarchy on Ubuntu 26.04 — one-shot installer. Runs the kit steps in order, resumable.
+# Omarchy on Ubuntu 26.04 LTS or later — one-shot installer. Runs the kit steps in order, resumable.
 #
 #   ./install.sh                 full install (asks for sudo when needed)
 #   ./install.sh --with-voxtype --with-pinta      (zsh users get step 60 automatically; --no-zsh to skip)

@@ -7,7 +7,7 @@ need sudo apt-get
 CLI=(
   foot alacritty bash-completion bat eza fd-find fzf ripgrep zoxide tmux starship gum jq git less man-db unzip whois
   btop fastfetch inxi inotify-tools socat plocate dosfstools exfatprogs
-  yt-dlp wl-clipboard wtype grim slurp qrencode zbar-tools tesseract-ocr tesseract-ocr-eng tesseract-ocr-fra
+  yt-dlp wl-clipboard wtype grim slurp qrencode zbar-tools tesseract-ocr tesseract-ocr-eng
   imagemagick libvips-tools ffmpegthumbnailer ffmpeg
   brightnessctl ddcutil pamixer wireplumber pipewire-pulse pipewire-alsa udiskie
   libnotify-bin xdg-user-dirs xdg-utils fuse3 libxkbcommon-tools systemd-coredump
@@ -38,6 +38,19 @@ BUILD_DEPS=(
 # Docker: this machine already has docker-ce plus the compose/buildx plugins (Docker repository).
 # Only install Ubuntu's docker.io / docker-compose-v2 / docker-buildx when no docker is present.
 command -v docker >/dev/null || GUI+=(docker.io docker-compose-v2 docker-buildx)
+
+# OCR (SUPER + CTRL + PrtScr) in the system language, on top of English.
+ocr_lang=$(LC_ALL=C locale | sed -n 's/^LANG=\([a-z][a-z]\).*/\1/p' | head -1)
+case $ocr_lang in
+  ""|en) ;;
+  fr) CLI+=(tesseract-ocr-fra) ;;
+  de) CLI+=(tesseract-ocr-deu) ;;
+  nl) CLI+=(tesseract-ocr-nld) ;;
+  es) CLI+=(tesseract-ocr-spa) ;;
+  it) CLI+=(tesseract-ocr-ita) ;;
+  pt) CLI+=(tesseract-ocr-por) ;;
+  *) apt-cache show "tesseract-ocr-$ocr_lang" >/dev/null 2>&1 && CLI+=("tesseract-ocr-$ocr_lang") ;;
+esac
 
 say "Updating package index"; sudo apt-get update
 say "CLI tools (${#CLI[@]} packages)";            apt_install "${CLI[@]}"

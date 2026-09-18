@@ -1,5 +1,5 @@
 #!/bin/bash
-# Runs the kit inside a fresh Ubuntu 26.04 container as an unprivileged sudo user.
+# Runs the kit inside a fresh Ubuntu container as an unprivileged sudo user (IMAGE= to change the release).
 #   test/docker-test.sh            create the container and run ./install.sh
 #   test/docker-test.sh --resume   re-run ./install.sh in the existing container (completed steps skipped)
 #   test/docker-test.sh --shell    open a shell in the container

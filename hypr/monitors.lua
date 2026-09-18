@@ -1,16 +1,14 @@
--- Monitors of this ThinkPad P14s Gen 5 (omarchy-ubuntu kit). See: hyprctl monitors all
--- Omarchy assumes a retina-class display (scale 2); here 1920x1200 14" and 2560x1440 32" → scale 1.
-local omarchy_monitor_scale = 1
+-- Monitors (omarchy-ubuntu kit) — generic: every output uses its preferred mode, placed automatically.
+-- See what you have with: hyprctl monitors all
+hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "auto" })
 
-hl.monitor({ output = "eDP-1",    mode = "1920x1200@60",  position = "0x0",    scale = omarchy_monitor_scale })
-hl.monitor({ output = "HDMI-A-1", mode = "2560x1440@144", position = "1920x0", scale = omarchy_monitor_scale })
-hl.monitor({ output = "",         mode = "preferred",     position = "auto",   scale = "auto" })
-
--- Workspaces per monitor (as before the migration).
-hl.workspace_rule({ workspace = "1", monitor = "eDP-1" })
-hl.workspace_rule({ workspace = "2", monitor = "HDMI-A-1" })
-hl.workspace_rule({ workspace = "3", monitor = "HDMI-A-1" })
-
--- GTK only honors integers; 1 at scale 1 (Omarchy defaults to 2).
+-- GDK_SCALE is what sizes X11/XWayland windows; GTK only honors whole numbers.
+-- Use 2 on a retina-class panel (Omarchy's own default), 1 otherwise.
 local omarchy_gdk_scale = 1
 hl.env("GDK_SCALE", tostring(omarchy_gdk_scale))
+
+-- Fixed layouts belong either in hypr/machines/<machine>/monitors.lua in the kit, applied when the DMI
+-- identity matches, or in hyprmoncfg (step 55), which switches profiles on hotplug, lid and resume.
+-- Example:
+--   hl.monitor({ output = "DP-2", mode = "2560x1440@144", position = "0x0", scale = 1 })
+--   hl.workspace_rule({ workspace = "1", monitor = "DP-2" })

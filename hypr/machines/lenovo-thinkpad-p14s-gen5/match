@@ -1,0 +1,3 @@
+# DMI patterns, one per line, matched against /sys/class/dmi/id/product_name and product_family
+# with omarchy-hw-match. Step 40 applies the .lua files next to this file when one matches.
+ThinkPad P14s Gen 5

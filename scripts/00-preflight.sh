@@ -3,6 +3,7 @@
 . "$(dirname "$0")/lib.sh"
 
 say "System"
+if [[ $(os_release ID) == ubuntu ]] && awk -v v="$(os_release VERSION_ID)" 'BEGIN { split(v, a, "."); exit !(a[1] > 26 || (a[1] == 26 && a[2] >= 4)) }'; then ok "Ubuntu $(os_release VERSION_ID): supported"; else warn "this kit needs Ubuntu 26.04 LTS or later (Lua 5.5, Qt 6.10)"; fi
 (( IN_CONTAINER )) && info "container mode: session-dependent steps will be skipped"
 info "$(lsb_release -ds 2>/dev/null || grep PRETTY_NAME /etc/os-release | cut -d'"' -f2)  ·  kernel $(uname -r)  ·  $(uname -m)"
 info "GPU: $(lspci 2>/dev/null | grep -iE 'vga|3d' | sed 's/.*: //' | head -1)"

@@ -83,6 +83,26 @@ Structural points for a port:
   0.56.2 is therefore mandatory, and the PPA makes it possible. Hyprland 0.56 loads `hyprland.lua` in
   preference to `hyprland.conf` when both exist.
 
+## 2b. Portability: what is generic and what is not
+
+The kit is written for any Ubuntu 26.04 LTS machine, not for the ThinkPad it was built on:
+
+| Setting | How it is decided |
+| --- | --- |
+| Ubuntu release | `require_ubuntu` in `lib.sh` stops below 26.04 LTS: Hyprland 0.56 needs Lua 5.5 and the shell a recent Qt 6, and 24.04 LTS ships neither (no `lua5.5`, Qt 6.4.2) |
+| Keyboard layout | read from `/etc/default/keyboard`, falling back to `/etc/vconsole.conf` then `us`; Omarchy alone reads only the latter, which a plain Ubuntu does not have |
+| AZERTY keycode fixes | added by `hypr/bindings.lua` only when that layout is `be` or `fr` |
+| Monitors | generic `preferred`/`auto`; fixed layouts live in `hypr/machines/<machine>/` and are applied by step 40 only when `/sys/class/dmi/id/product_name` or `product_family` matches the profile's `match` file; per-setup layouts are hyprmoncfg's job (step 55) |
+| OCR language | `tesseract-ocr-<lang>` derived from `$LANG`, on top of English |
+| Dictation model | `base.en` in English, the multilingual `small` model otherwise (step 25) |
+| Transcription engine | GPU when Vulkan is detected, CPU otherwise, asked at install time |
+| Shell integration | step 60 runs automatically when `$SHELL` is zsh |
+| Session-only steps | skipped when no user systemd manager or compositor is present, as in a container |
+
+The single machine profile that ships with the kit is `lenovo-thinkpad-p14s-gen5`, which pins the internal
+1920x1200 panel and an Acer 2560x1440@144 on HDMI, with workspaces 1 on the laptop and 2 and 3 on the
+external screen.
+
 ## 3. Component inventory
 
 The detail of the 150 packages of `omarchy-base.packages` is in `MATRIX.md`. In short:
