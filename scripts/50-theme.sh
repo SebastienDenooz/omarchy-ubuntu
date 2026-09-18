@@ -4,7 +4,15 @@
 . "$(dirname "$0")/lib.sh"
 omarchy_env
 need omarchy-theme-set
-theme="${1:-Tokyo Night}"
+# Omarchy ships 22 themes; its own default is Tokyo Night. An argument still wins over the question.
+if [[ -n ${1:-} ]]; then
+  theme=$1
+else
+  mapfile -t themes < <(find "$OMARCHY_SYS/themes" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' |
+    sed -E 's/(^|-)([a-z])/\1\u\2/g; s/-/ /g' | sort)
+  ask_choice KIT_THEME "Which theme?" "Tokyo Night" "${themes[@]}"
+  theme=$KIT_THEME
+fi
 say "Theme \"$theme\""
 mkdir -p "$HOME/.config/omarchy/themes" "$HOME/.local/state/omarchy/current"
 OMARCHY_THEME_HEADLESS=1 omarchy-theme-set "$theme" || die "omarchy-theme-set failed"

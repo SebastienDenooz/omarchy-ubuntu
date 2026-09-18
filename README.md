@@ -33,6 +33,20 @@ git clone <this kit> ~/omarchy-ubuntu && cd ~/omarchy-ubuntu
 ./install.sh --with-voxtype --with-pinta --ufw   # optional extras (--no-zsh to keep your own zsh config)
 ```
 
+It asks five questions on the way, each with a sensible default, and remembers the answers in
+`logs/answers.env` so a resumed run does not ask again:
+
+| Question | Default | Step |
+| --- | --- | --- |
+| Install a browser for the web apps and hotkeys? | Google Chrome | 15 |
+| Natural (inverted) touchpad scrolling? | no, as on Omarchy | 40 |
+| Default terminal | foot, as on Omarchy | 40 |
+| Save the monitors connected right now as a machine profile? | no | 40 |
+| Which theme? | Tokyo Night, as on Omarchy | 50 |
+
+`--defaults` answers all of them without asking, which is also what happens without a terminal, as in a
+container or a CI job. `--reset` clears both the completed steps and the remembered answers.
+
 `install.sh` runs the steps below in order, logs to `logs/install-<timestamp>.log`, and remembers completed
 steps in `logs/done/`: re-run it after fixing a failure and it resumes. `--from=30`, `--only=21` and
 `--reset` are available. Step 21 (builds) fails when any build fails; retry just those with
@@ -85,14 +99,17 @@ The kit ships generic defaults: every monitor uses its preferred mode, the keybo
 `/etc/default/keyboard`, and the AZERTY keycode fixes are added only when that layout is `be` or `fr`.
 
 Fixed monitor layouts live in `hypr/machines/<machine>/`, applied by step 40 only when the DMI identity
-matches the patterns in that directory's `match` file. `hypr/machines/lenovo-thinkpad-p14s-gen5/` is the
-example that ships with the kit. To add your own:
+matches the patterns in that directory's `match` file. With a Hyprland session running and nothing on
+file for your hardware, step 40 offers to write one from the monitors as they are currently wired. By
+hand it is two files:
 
 ```
 mkdir -p hypr/machines/my-laptop
 echo "XPS 13 9350" > hypr/machines/my-laptop/match      # matched against product_name / product_family
 $EDITOR hypr/machines/my-laptop/monitors.lua            # hl.monitor / hl.workspace_rule rules
 ```
+
+Profiles are not tracked by git, since they describe one person's desk. See `hypr/machines/README.md`.
 
 For layouts that should follow whatever you plug in, use hyprmoncfg (step 55) instead: it stores a
 profile per setup and applies it on hotplug, lid and resume.
@@ -135,7 +152,7 @@ test/docker-test.sh  clean-container test of install.sh
 overrides/bin/       28 omarchy-* scripts rewritten for apt / no-op, plus the Ubuntu lock-screen PAM
 overrides/pkgmap.txt Arch → apt package name map
 hypr/                generic monitors, input, bindings, looknfeel, autostart
-hypr/machines/       fixed layouts applied when the machine's DMI identity matches
+hypr/machines/       fixed layouts applied when the DMI identity matches (not tracked; see its README)
 themed/              theme templates adapted to Ubuntu (foot 1.25)
 dl/ build/ logs/     downloads, builds, logs (created on use)
 backups/             your replaced configs, timestamped

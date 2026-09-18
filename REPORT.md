@@ -92,16 +92,16 @@ The kit is written for any Ubuntu 26.04 LTS machine, not for the ThinkPad it was
 | Ubuntu release | `require_ubuntu` in `lib.sh` stops below 26.04 LTS: Hyprland 0.56 needs Lua 5.5 and the shell a recent Qt 6, and 24.04 LTS ships neither (no `lua5.5`, Qt 6.4.2); the danklinux PPA also publishes Quickshell for 26.04 but not for 24.04 |
 | Keyboard layout | read from `/etc/default/keyboard`, falling back to `/etc/vconsole.conf` then `us`; Omarchy alone reads only the latter, which a plain Ubuntu does not have |
 | AZERTY keycode fixes | added by `hypr/bindings.lua` only when that layout is `be` or `fr` |
-| Monitors | generic `preferred`/`auto`; fixed layouts live in `hypr/machines/<machine>/` and are applied by step 40 only when `/sys/class/dmi/id/product_name` or `product_family` matches the profile's `match` file; per-setup layouts are hyprmoncfg's job (step 55) |
+| Monitors | generic `preferred`/`auto`; fixed layouts live in `hypr/machines/<machine>/`, untracked, applied by step 40 only when `/sys/class/dmi/id/product_name` or `product_family` matches the profile's `match` file, and step 40 offers to generate one from the connected monitors; per-setup layouts are hyprmoncfg's job (step 55) |
 | OCR language | `tesseract-ocr-<lang>` derived from `$LANG`, on top of English |
 | Dictation model | `base.en` in English, the multilingual `small` model otherwise (step 25) |
 | Transcription engine | GPU when Vulkan is detected, CPU otherwise, asked at install time |
 | Shell integration | step 60 runs automatically when `$SHELL` is zsh |
+| Touchpad scrolling, terminal, browser, theme | asked at install time, defaulting to Omarchy's own choices (traditional scrolling, foot, Chrome for the web apps, Tokyo Night); answers kept in `logs/answers.env`, `--defaults` skips the questions |
 | Session-only steps | skipped when no user systemd manager or compositor is present, as in a container |
 
-The single machine profile that ships with the kit is `lenovo-thinkpad-p14s-gen5`, which pins the internal
-1920x1200 panel and an Acer 2560x1440@144 on HDMI, with workspaces 1 on the laptop and 2 and 3 on the
-external screen.
+No machine profile ships with the kit: the repository holds only the mechanism and its documentation, and
+a profile is generated on the machine that needs one.
 
 ## 3. Component inventory
 

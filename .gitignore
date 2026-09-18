@@ -4,3 +4,6 @@ build/
 logs/
 backups/
 logs-*.txt
+
+# machine-specific monitor layouts (see hypr/machines/README.md)
+hypr/machines/*/

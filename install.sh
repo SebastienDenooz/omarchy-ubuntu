@@ -6,7 +6,8 @@
 #   ./install.sh --no-hyprmoncfg                  skip the multi-monitor manager (step 55)
 #   ./install.sh --from 30       resume at step 30 (completed steps are also skipped automatically)
 #   ./install.sh --only 21       run a single step
-#   ./install.sh --reset         forget completed steps
+#   ./install.sh --defaults      never ask, take every default
+#   ./install.sh --reset         forget completed steps and remembered answers
 #
 # Each step logs to logs/install-<timestamp>.log and marks logs/done/<step> on success.
 set -euo pipefail
@@ -29,7 +30,8 @@ for a in "$@"; do
     --with-pinta) extra_args+=(--with-pinta) ;;
     --ufw|--docker) extra_args+=("$a") ;;
     --gpu|--cpu) extra_args+=("$a") ;;
-    --reset) rm -f logs/done/*; echo "completed-step markers cleared" ;;
+    --defaults) export KIT_DEFAULTS=1 ;;
+    --reset) rm -f logs/done/* logs/answers.env; echo "completed-step markers and remembered answers cleared" ;;
     -h|--help) sed -n '2,13p' "$0"; exit 0 ;;
     *) echo "unknown option: $a" >&2; exit 2 ;;
   esac
@@ -51,6 +53,10 @@ step_args() { # options forwarded to a given step
   done
   printf '%s\n' "${out[@]}"
 }
+
+# Steps are piped into tee, so their stdout is not a terminal: tell them a user is watching, and they
+# will ask their questions on /dev/tty. Answers are remembered in logs/answers.env.
+[[ -t 0 && -t 1 ]] && export KIT_INTERACTIVE=1
 
 echo "Omarchy on Ubuntu — installer · log: $LOG"
 [[ $EUID -eq 0 ]] && { echo "Run as your normal user (sudo is requested when needed)." >&2; exit 1; }

@@ -24,7 +24,18 @@ ok "Omarchy configs in place (hypr, foot, alacritty, ghostty, kitty, btop, tmux,
 say "Hyprland overrides (generic: layout and monitors follow the system)"
 install -m644 "$KIT_DIR"/hypr/*.lua "$HOME/.config/hypr/"
 ok "monitors.lua input.lua bindings.lua looknfeel.lua autostart.lua"
+
+# Touchpad scrolling is a preference, not a fact about the machine: Omarchy ships traditional scrolling.
+ask_yes_no KIT_NATURAL_SCROLL "Natural (inverted) touchpad scrolling?" no
+[[ $KIT_NATURAL_SCROLL == yes ]] || sed -i 's/natural_scroll = true/natural_scroll = false/' "$HOME/.config/hypr/input.lua"
+ok "touchpad: natural scrolling $KIT_NATURAL_SCROLL"
+
 apply_machine_profiles
+# Nothing on file for this hardware: offer to capture the monitors as they are wired right now.
+if has_hyprland && [[ ${MACHINE_PROFILE_APPLIED:-0} != 1 ]]; then
+  ask_yes_no KIT_MACHINE_PROFILE "Save the monitors connected right now as a profile for this machine?" no
+  [[ $KIT_MACHINE_PROFILE == yes ]] && { generate_machine_profile && apply_machine_profiles; }
+fi
 
 say "Theme templates adapted to Ubuntu"
 # foot 1.25 (Ubuntu) does not know [colors-dark]/[colors-light] (foot ≥ 1.26): user template takes priority.
@@ -53,10 +64,26 @@ cp -f "$OMARCHY_SYS"/default/nautilus-python/extensions/*.py "$HOME/.local/share
 ok "$(ls "$OMARCHY_SYS"/applications/*.desktop | wc -l) launchers, Nautilus extensions (LocalSend, Transcode)"
 
 say "File types, default browser and terminal"
-sed 's/chromium.desktop/google-chrome.desktop/' "$OMARCHY_SYS/default/applications/mimeapps.list" > "$HOME/.config/mimeapps.list"
-env -u BROWSER xdg-settings set default-web-browser google-chrome.desktop 2>/dev/null || warn "xdg-settings: default browser not set (no session); Chrome is in mimeapps.list anyway"
-echo "foot.desktop" > "$HOME/.config/xdg-terminals.list"
-ok "Chrome as default (Chromium is a snap on Ubuntu), terminal foot — change with: omarchy-default-terminal kitty"
+if command -v google-chrome-stable >/dev/null; then
+  sed 's/chromium.desktop/google-chrome.desktop/' "$OMARCHY_SYS/default/applications/mimeapps.list" >"$HOME/.config/mimeapps.list"
+  env -u BROWSER xdg-settings set default-web-browser google-chrome.desktop 2>/dev/null ||
+    warn "xdg-settings: default browser not set (no session); Chrome is in mimeapps.list anyway"
+  ok "default browser: Google Chrome"
+else
+  cp "$OMARCHY_SYS/default/applications/mimeapps.list" "$HOME/.config/mimeapps.list"
+  warn "no Chromium-family browser installed: web apps and the browser hotkeys will not work until you install one"
+fi
+
+# Omarchy's own default is foot; the others are offered when they are installed.
+terminals=(foot); for t in kitty alacritty ghostty; do command -v "$t" >/dev/null && terminals+=("$t"); done
+ask_choice KIT_TERMINAL "Default terminal?" foot "${terminals[@]}"
+case $KIT_TERMINAL in
+  kitty) echo "kitty.desktop" ;;
+  alacritty) echo "Alacritty.desktop" ;;
+  ghostty) echo "com.mitchellh.ghostty.desktop" ;;
+  *) echo "foot.desktop" ;;
+esac >"$HOME/.config/xdg-terminals.list"
+ok "default terminal: $KIT_TERMINAL — change later with: omarchy-default-terminal <name>"
 
 say "XCompose, branding, keyring, user directories"
 git_name=$(git config --global user.name || true); git_email=$(git config --global user.email || true)

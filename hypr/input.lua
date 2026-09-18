@@ -34,7 +34,7 @@ hl.config({
     repeat_delay = 300,
     numlock_by_default = true,
     touchpad = {
-      natural_scroll = true,          -- kit default; Omarchy ships false
+      natural_scroll = true,          -- asked by step 40; Omarchy's own default is false
       clickfinger_behavior = true,
       scroll_factor = 0.4,
       disable_while_typing = true,
