@@ -1,5 +1,5 @@
 #!/bin/bash
-# Ubuntu : vrai si tous les paquets (noms Arch traduits) sont installés.
+# Ubuntu: true when every package (Arch names translated) is installed.
 for p in $(omarchy-ubuntu-pkgmap "$@"); do
   [[ $p == SKIP ]] && exit 1
   dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q 'install ok installed' || exit 1

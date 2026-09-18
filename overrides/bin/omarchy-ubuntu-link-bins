@@ -1,3 +1,3 @@
 #!/bin/bash
-# Recrée les liens /usr/local/bin/omarchy-* vers /usr/share/omarchy/bin (à rejouer après une mise à jour).
+# Recreates the /usr/local/bin/omarchy-* links to /usr/share/omarchy/bin (re-run after an update).
 for f in /usr/share/omarchy/bin/omarchy*; do sudo ln -sfn "$f" "/usr/local/bin/$(basename "$f")"; done

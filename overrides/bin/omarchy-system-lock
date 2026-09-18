@@ -1,0 +1,46 @@
+#!/bin/bash
+# Ubuntu: upstream omarchy-system-lock plus a safety net.
+#
+# The shell's lock IPC has been seen answering "ok" without ever securing the session: its lock service
+# reported locked=true while secure, sessionLocked and requested were all false (observed after a
+# fingerprint unlock). Every later lock request — the SUPER + CTRL + L hotkey, the idle timer, the lid,
+# the pre-suspend hook — then silently did nothing. scripts/31-overrides.sh patches the shell so the IPC
+# decides on the real Wayland session state; this wrapper verifies the session actually secured and, as
+# a last resort, restarts the shell once and locks again.
+
+secured() {
+  OMARCHY_SHELL_IPC_TIMEOUT=1s omarchy-shell lock status 2>/dev/null |
+    jq -e '.secure == true or .sessionLocked == true' >/dev/null 2>&1
+}
+
+wait_secured() { # wait_secured <tenths of a second>
+  local i
+  for ((i = 0; i < ${1:-20}; i++)); do
+    secured && return 0
+    sleep 0.1
+  done
+  return 1
+}
+
+omarchy-shell lock lock >/dev/null 2>&1 || true
+
+if ! wait_secured 20; then
+  echo "omarchy-system-lock: the shell did not secure the session, restarting it" >&2
+  omarchy-restart-shell >/dev/null 2>&1 || true
+  omarchy-shell lock lock >/dev/null 2>&1 || true
+  wait_secured 50 || echo "omarchy-system-lock: session still not secured" >&2
+fi
+
+hyprctl switchxkblayout all 0 >/dev/null 2>&1
+
+if pgrep -x "1password" >/dev/null && omarchy-cmd-present 1password; then
+  (
+    flock -n 9 || exit 0
+    timeout --kill-after=1s 3s 1password --lock >/dev/null 2>&1 || true
+  ) 9>"${XDG_RUNTIME_DIR:-/tmp}/omarchy-1password-lock.lock" &
+fi
+
+pkill -x ttfx 2>/dev/null || true
+timeout 1s pidwait -x ttfx 2>/dev/null || true
+pkill -f '[o]rg.omarchy.screensaver' 2>/dev/null || true
+exit 0

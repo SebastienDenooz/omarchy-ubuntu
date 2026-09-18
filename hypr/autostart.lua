@@ -1,7 +1,7 @@
--- Programmes lancés avec la session (kit omarchy-ubuntu).
--- Omarchy démarre déjà : le shell (barre, menu, notifications, verrouillage, OSD), udiskie,
--- la surveillance des écrans, les hooks post-boot. Pas de waybar/swaync/hypridle : le shell les remplace.
+-- Programs started with the session (omarchy-ubuntu kit).
+-- Omarchy already starts: the shell (bar, menu, notifications, lock, OSD), udiskie,
+-- monitor watching, post-boot hooks. No waybar/swaync/hypridle: the shell replaces them.
 
--- Exemples :
--- o.launch_on_start("hyprsunset")        -- lumière de nuit programmée (voir ~/.config/hypr/hyprsunset.conf)
+-- Examples:
+-- o.launch_on_start("hyprsunset")        -- scheduled night light (see ~/.config/hypr/hyprsunset.conf)
 -- o.launch_on_start("signal-desktop --start-in-tray")

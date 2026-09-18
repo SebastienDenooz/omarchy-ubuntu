@@ -1,6 +1,6 @@
 #!/bin/bash
-# Ubuntu : configuration PAM de l'écran de verrouillage du shell Omarchy (services omarchy-lock-*).
-# La version Arch inclut « system-local-login » ; ici on s'appuie sur common-auth / common-account.
+# Ubuntu: PAM configuration for the Omarchy shell lock screen (omarchy-lock-* services).
+# The Arch version includes "system-local-login"; here we rely on common-auth / common-account.
 set -e
 target_user=${OMARCHY_INSTALL_USER:-${SUDO_USER:-$USER}}
 as_root() { if (( EUID == 0 )); then "$@"; else sudo "$@"; fi; }

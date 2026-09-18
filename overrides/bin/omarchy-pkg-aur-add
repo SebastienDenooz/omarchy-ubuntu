@@ -1,3 +1,9 @@
 #!/bin/bash
-echo "AUR indisponible sur Ubuntu. Cherche un .deb, un flatpak (flathub) ou compile depuis les sources." >&2
+# Ubuntu: there is no AUR. A few Omarchy plugins install their backend from the AUR; those that the kit
+# knows how to build from source are routed there, everything else is refused with a hint.
+case " $* " in
+  *" hyprmoncfg-bin "* | *" hyprmoncfg "*)
+    exec omarchy-ubuntu-install-hyprmoncfg ;;
+esac
+echo "The AUR is not available on Ubuntu. Look for a .deb, a flatpak (flathub) or build from source." >&2
 exit 1

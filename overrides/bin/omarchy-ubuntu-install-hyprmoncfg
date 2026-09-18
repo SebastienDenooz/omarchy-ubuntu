@@ -1,0 +1,74 @@
+#!/bin/bash
+# Ubuntu: builds hyprmoncfg (TUI/CLI) and hyprmoncfgd (daemon) from source, as described on
+# https://hyprmoncfg.dev/getting-started/, since the AUR package the Omarchy plugin expects does not
+# exist here. Used by scripts/55-hyprmoncfg.sh and by the omarchy-pkg-aur-add override, so the plugin
+# panel's own "Install hyprmoncfg" button works too.
+#
+#   omarchy-ubuntu-install-hyprmoncfg            install or upgrade to $HYPRMONCFG_VERSION
+#   omarchy-ubuntu-install-hyprmoncfg --force    rebuild even when that version is installed
+set -euo pipefail
+
+VERSION="${HYPRMONCFG_VERSION:-1.18.3}"      # the plugin requires at least 1.18.3
+REPO=https://github.com/crmne/hyprmoncfg.git
+SRC="${XDG_CACHE_HOME:-$HOME/.cache}/omarchy-ubuntu/hyprmoncfg"
+BIN="$HOME/.local/bin"
+UNIT_DIR="$HOME/.config/systemd/user"
+export PATH="$BIN:$PATH"
+
+command -v git >/dev/null || { echo "git is required: sudo apt install git" >&2; exit 1; }
+command -v go  >/dev/null || { echo "go is required: sudo apt install golang-go" >&2; exit 1; }
+
+current=$(hyprmoncfg version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
+if [[ $current == "$VERSION" && ${1:-} != --force ]]; then
+  echo "hyprmoncfg $VERSION already installed"
+else
+  echo "Building hyprmoncfg $VERSION from $REPO"
+  rm -rf "$SRC"; mkdir -p "$(dirname "$SRC")"
+  git clone --quiet --depth 1 --branch "v$VERSION" "$REPO" "$SRC"
+  commit=$(git -C "$SRC" rev-parse --short HEAD)
+  # Same flags as the upstream packages. The plugin reads the release number from "hyprmoncfg version",
+  # so it must be stamped. go.mod may ask for a newer Go than Ubuntu's: GOTOOLCHAIN=auto fetches it.
+  ldflags="-s -w -X github.com/crmne/hyprmoncfg/internal/buildinfo.Version=$VERSION"
+  ldflags+=" -X github.com/crmne/hyprmoncfg/internal/buildinfo.Commit=$commit"
+  ldflags+=" -X github.com/crmne/hyprmoncfg/internal/buildinfo.Date=$(date -u +%FT%TZ)"
+  (
+    cd "$SRC"
+    export GOTOOLCHAIN=auto CGO_ENABLED=0
+    go build -buildvcs=false -trimpath -mod=readonly -ldflags "$ldflags" -o bin/hyprmoncfg ./cmd/hyprmoncfg
+    go build -buildvcs=false -trimpath -mod=readonly -ldflags "$ldflags" -o bin/hyprmoncfgd ./cmd/hyprmoncfgd
+  )
+  install -Dm755 "$SRC/bin/hyprmoncfg" "$BIN/hyprmoncfg"
+  install -Dm755 "$SRC/bin/hyprmoncfgd" "$BIN/hyprmoncfgd"
+
+  apps="$HOME/.local/share/applications"
+  install -Dm644 "$SRC/packaging/applications/hyprmoncfg-omarchy.desktop" "$apps/hyprmoncfg-omarchy.desktop"
+  # Launcher entry opened the Omarchy way, as the Arch package does.
+  sed -e 's|^Exec=.*|Exec=xdg-terminal-exec --app-id=TUI.float -e hyprmoncfg|' \
+      -e 's/^Terminal=true$/Terminal=false/' -e 's/^StartupNotify=false$/StartupNotify=true/' \
+      "$SRC/packaging/applications/hyprmoncfg.desktop" > "$apps/hyprmoncfg.desktop"
+  install -Dm644 "$SRC/packaging/icons/hyprmoncfg.svg" "$HOME/.local/share/icons/hicolor/scalable/apps/hyprmoncfg.svg"
+  echo "Installed $(hyprmoncfg version 2>/dev/null | head -1) into $BIN"
+fi
+
+# Daemon: the upstream "local" unit starts ~/.local/bin/hyprmoncfgd.
+unit_src="$SRC/packaging/systemd/hyprmoncfgd.local.service"
+if [[ ! -f $unit_src && ! -f $UNIT_DIR/hyprmoncfgd.service ]]; then
+  rm -rf "$SRC"; mkdir -p "$(dirname "$SRC")"
+  git clone --quiet --depth 1 --branch "v$VERSION" "$REPO" "$SRC"
+fi
+[[ -f $unit_src ]] && install -Dm644 "$unit_src" "$UNIT_DIR/hyprmoncfgd.service"
+
+if [[ ! -f /.dockerenv ]] && systemctl --user show-environment >/dev/null 2>&1; then
+  systemctl --user daemon-reload
+  systemctl --user enable hyprmoncfgd.service >/dev/null 2>&1
+  systemctl --user restart hyprmoncfgd.service
+  echo "hyprmoncfgd.service: $(systemctl --user is-active hyprmoncfgd.service)"
+else
+  # No user manager (container): enable through the wants/ symlink, started at the first login.
+  mkdir -p "$UNIT_DIR/default.target.wants"
+  ln -sfn ../hyprmoncfgd.service "$UNIT_DIR/default.target.wants/hyprmoncfgd.service"
+  echo "hyprmoncfgd.service enabled for the next login"
+fi
+
+# A failed attempt from the panel's install button leaves this marker behind and freezes the panel on it.
+rm -f "${XDG_RUNTIME_DIR:-/tmp}/hyprmoncfg-panel-install.failed"

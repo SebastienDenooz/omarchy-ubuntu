@@ -1,5 +1,5 @@
 #!/bin/bash
-# Ubuntu : version = tag git du dépôt exposé en /usr/share/omarchy.
+# Ubuntu: version = git tag of the checkout exposed as /usr/share/omarchy.
 co=$(readlink -f "${OMARCHY_PATH:-/usr/share/omarchy}")
 v=$(git -C "$co" describe --tags --always 2>/dev/null) || exit 1
 echo "${v#v} (ubuntu)"

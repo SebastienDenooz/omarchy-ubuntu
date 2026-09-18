@@ -1,12 +1,12 @@
 #!/bin/bash
-# Ubuntu : remet les configs utilisateur aux défauts d'Omarchy (copie de $OMARCHY_PATH/config, sauvegardes .bak).
+# Ubuntu: resets user configs to Omarchy defaults (copy of $OMARCHY_PATH/config, .bak backups).
 set -euo pipefail
 src="${OMARCHY_PATH:-/usr/share/omarchy}/config"
-echo "Réinitialisation des configs utilisateur depuis $src…"
+echo "Resetting user configs from $src…"
 ( cd "$src" && find . -type f | while read -r f; do
     dest="$HOME/.config/${f#./}"
     [[ -f $dest ]] && ! cmp -s "$f" "$dest" && cp -f "$dest" "$dest.bak.$(date +%s)"
     mkdir -p "$(dirname "$dest")"; cp -f "$f" "$dest"
   done )
 command -v omarchy-nvim-setup >/dev/null && omarchy-nvim-setup --force || true
-echo "Terminé. Les fichiers remplacés ont une copie .bak.<horodatage>."
+echo "Done. Replaced files have a .bak.<timestamp> copy."

@@ -1,10 +1,10 @@
 #!/bin/bash
-# Ubuntu : redémarrage après mise à jour (sans vérification pacman du noyau).
+# Ubuntu: post-update restart (without the pacman kernel check).
 if [[ -f /var/run/reboot-required || -f $HOME/.local/state/omarchy/reboot-required ]]; then
-  gum confirm "Une mise à jour demande un redémarrage. Redémarrer ?" && { omarchy-system-reboot; exit 0; }
+  gum confirm "An update requires a reboot. Reboot now?" && { omarchy-system-reboot; exit 0; }
 fi
 running=$(readlink /proc/$(pgrep -x Hyprland | head -1)/exe 2>/dev/null)
-[[ $running == *"(deleted)"* ]] && gum confirm "Hyprland a été mis à jour. Redémarrer ?" && { omarchy-system-reboot; exit 0; }
+[[ $running == *"(deleted)"* ]] && gum confirm "Hyprland has been updated. Reboot?" && { omarchy-system-reboot; exit 0; }
 for file in "$HOME"/.local/state/omarchy/restart-*-required; do
   [[ -f $file ]] || continue
   service=$(basename "$file" | sed 's/restart-\(.*\)-required/\1/'); rm -f "$file"; "omarchy-restart-$service" || true

@@ -1,12 +1,12 @@
 #!/bin/bash
-# Étape 60 (optionnelle) — Équivalent du paquet omarchy-zsh : alias, fonctions et options Omarchy pour zsh.
-# N'écrase pas ~/.zshrc : ajoute une ligne « source » (sauvegarde faite).
+# Step 60 (optional) — Equivalent of the omarchy-zsh package: Omarchy aliases, functions and options for zsh.
+# Does not overwrite ~/.zshrc: appends one "source" line (backup made).
 . "$(dirname "$0")/lib.sh"
 need git zsh
 ZSH_VER=1.5.0
 dest="$HOME/.local/share/omarchy-zsh"
 
-say "Sources : omarchy-zsh v$ZSH_VER + omadots (config partagée)"
+say "Sources: omarchy-zsh v$ZSH_VER + omadots (shared shell config)"
 rm -rf "$BUILD/omarchy-zsh" "$BUILD/omadots"
 git clone --depth 1 --branch "v$ZSH_VER" https://github.com/omacom-io/omarchy-zsh "$BUILD/omarchy-zsh"
 git clone --depth 1 https://github.com/omacom-io/omadots "$BUILD/omadots"
@@ -16,14 +16,20 @@ find "$dest/shell" -type f -exec sed -i -e "s|\"\$HOME\"/\.config/shell|$dest/sh
 cp "$BUILD/omarchy-zsh/shell/zoptions" "$dest/shell/"
 cp "$BUILD/omarchy-zsh/shell/completions/"* "$HOME/.local/share/zsh/site-functions/" 2>/dev/null || true
 sed -e "s|/usr/share/omarchy-zsh|$dest|g" "$BUILD/omarchy-zsh/templates/zshrc" > "$dest/zshrc"
-ok "installé dans $dest"
+ok "installed in $dest"
 
-say "Branchement dans ~/.zshrc"
+say "Hooking into ~/.zshrc"
+# Frameworks such as oh-my-zsh define aliases (ga, gd…) with the same names as Omarchy's shell functions;
+# zsh refuses to define a function over an alias, so those aliases are removed right before sourcing.
+fns=$(grep -hoE '^[a-zA-Z_][a-zA-Z0-9_-]*\(\)' "$dest"/fns/* "$dest"/functions 2>/dev/null | tr -d '()' | sort -u | tr '\n' ' ')
 cp -n "$HOME/.zshrc" "$BACKUPS/$BACKUP_TS-zshrc" 2>/dev/null || true
 grep -q 'omarchy-zsh/zshrc' "$HOME/.zshrc" 2>/dev/null || cat >> "$HOME/.zshrc" <<EOZ
 
-# Omarchy (alias ls/lt/ff/n/g…, fonctions tdl/compress/…, starship, zoxide) — kit omarchy-ubuntu
+# Omarchy (ls/lt/ff/n/g… aliases, tdl/compress/… functions, starship, zoxide) — omarchy-ubuntu kit
 fpath=(\$HOME/.local/share/zsh/site-functions \$fpath)
+unalias $fns 2>/dev/null   # framework aliases that would collide with Omarchy's functions
 [[ -f $dest/zshrc ]] && source $dest/zshrc
+# Ubuntu ships fzf's zsh integration under /usr/share/doc/fzf/examples, not /usr/share/fzf (omadots' path)
+for f in /usr/share/doc/fzf/examples/completion.zsh /usr/share/doc/fzf/examples/key-bindings.zsh; do [[ -f \$f ]] && source \$f; done
 EOZ
-ok "ligne ajoutée ; ouvre un nouveau terminal. Dépendance conseillée : sudo apt install zsh-syntax-highlighting"
+ok "line added; open a new terminal. Recommended dependency: sudo apt install zsh-syntax-highlighting"

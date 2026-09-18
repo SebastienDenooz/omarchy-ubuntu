@@ -1,5 +1,5 @@
-# Correspondance nom Arch = paquet(s) apt (séparés par des espaces). SKIP = pas d'équivalent apt.
-# Utilisée par omarchy-pkg-add / -present / -missing / -drop. Complète-la au fil des besoins.
+# Arch package name = apt package(s) (space-separated). SKIP = no apt equivalent.
+# Used by omarchy-pkg-add / -present / -missing / -drop. Extend it as needs arise.
 chromium=google-chrome-stable
 nvim=neovim
 fd=fd-find
@@ -81,7 +81,7 @@ ttfx=SKIP
 aether=SKIP
 cliamp=SKIP
 tobi-try=SKIP
-voxtype-bin=SKIP
+voxtype-bin=voxtype
 hyprland-preview-share-picker=SKIP
 gpu-screen-recorder=SKIP
 quickshell=SKIP

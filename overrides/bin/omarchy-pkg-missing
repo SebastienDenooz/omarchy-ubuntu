@@ -1,3 +1,3 @@
 #!/bin/bash
-# Ubuntu : vrai si au moins un paquet manque.
+# Ubuntu: true when at least one package is missing.
 omarchy-pkg-present "$@" && exit 1 || exit 0

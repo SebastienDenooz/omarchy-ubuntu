@@ -1,7 +1,7 @@
 #!/bin/bash
-# Ubuntu : menu Remove > Package → paquets installés manuellement.
+# Ubuntu: Remove > Package menu → manually installed packages.
 fzf_args=(--multi --preview 'apt-cache show {1} 2>/dev/null | head -40' --preview-window 'down:65%:wrap'
-  --preview-label='tab : sélection multiple · entrée : supprimer' --color 'pointer:red,marker:red')
+  --preview-label='tab: multi-select · enter: remove' --color 'pointer:red,marker:red')
 pkg_names=$(apt-mark showmanual | sort | fzf "${fzf_args[@]}")
 if [[ -n $pkg_names ]]; then
   echo "$pkg_names" | tr '\n' ' ' | xargs sudo apt-get remove --purge -y

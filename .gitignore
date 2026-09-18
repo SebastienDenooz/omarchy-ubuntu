@@ -1,5 +1,6 @@
-# généré à l'usage par les scripts
+# created at run time by the scripts
 dl/
 build/
 logs/
 backups/
+logs-*.txt

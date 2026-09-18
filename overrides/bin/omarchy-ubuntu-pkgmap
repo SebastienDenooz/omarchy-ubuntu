@@ -1,6 +1,6 @@
 #!/bin/bash
-# Traduit des noms de paquets Arch en paquets apt via $OMARCHY_PATH/ubuntu/pkgmap.txt.
-# Sortie : un nom apt par ligne ; "SKIP" si aucun équivalent ; le nom inchangé sinon.
+# Translates Arch package names into apt packages via $OMARCHY_PATH/ubuntu/pkgmap.txt.
+# Output: one apt name per line; "SKIP" when there is no equivalent; the unchanged name otherwise.
 map="${OMARCHY_PATH:-/usr/share/omarchy}/ubuntu/pkgmap.txt"
 for pkg in "$@"; do
   m=$(grep -m1 "^$pkg=" "$map" 2>/dev/null | cut -d= -f2-)

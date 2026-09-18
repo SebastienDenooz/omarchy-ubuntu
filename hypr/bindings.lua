@@ -1,32 +1,32 @@
--- Raccourcis personnels et corrections AZERTY (kit omarchy-ubuntu).
--- Les défauts Omarchy restent actifs (voir « omarchy menu keybindings » / SUPER + K).
--- Pour les couper tous : omarchy_default_bindings = false dans hyprland.lua avant require("default.hypr.omarchy").
+-- Personal bindings and AZERTY fixes (omarchy-ubuntu kit).
+-- The Omarchy defaults stay active (see "omarchy menu keybindings" / SUPER + K).
+-- To drop them all: omarchy_default_bindings = false in hyprland.lua before require("default.hypr.omarchy").
 
--- === Corrections pour le clavier belge ==========================================
--- Omarchy lie des keysyms US. En AZERTY belge, `, / et . demandent AltGr ou Shift :
--- les combinaisons SUPER + grave, SUPER + /, SUPER + CTRL + . sont donc injoignables.
--- On les double sur des keycodes physiques (indépendants de la disposition).
+-- === Belgian keyboard fixes ======================================================
+-- Omarchy binds US keysyms. On Belgian AZERTY, `, / and . need AltGr or Shift, so
+-- SUPER + grave, SUPER + / and SUPER + CTRL + . are unreachable. Duplicate them on
+-- physical keycodes (independent of the layout).
 
--- Scratchpad (SUPER + grave)  → touche ²/³ à gauche du 1 (code:49)
+-- Scratchpad (SUPER + grave)  → the ²/³ key left of 1 (code:49)
 o.bind("SUPER + code:49",         "Toggle scratchpad",           hl.dsp.workspace.toggle_special("scratchpad"))
 o.bind("SUPER + SHIFT + code:49", "Move window to scratchpad",   hl.dsp.window.move({ workspace = "special:scratchpad", follow = false }))
 
--- Échelle d'écran (SUPER + / et SUPER + ALT + /) → touche :/ (code:61)
+-- Monitor scaling (SUPER + / and SUPER + ALT + /) → the :/ key (code:61)
 o.bind("SUPER + code:61",         "Monitor scaling up",          "omarchy-hyprland-monitor-scaling up")
 o.bind("SUPER + ALT + code:61",   "Monitor scaling down",        "omarchy-hyprland-monitor-scaling down")
 
--- Transcodage (SUPER + CTRL + .) → touche ;. (code:60)
+-- Transcode (SUPER + CTRL + .) → the ;. key (code:60)
 o.bind("SUPER + CTRL + code:60",  "Transcode",                   "omarchy-transcode")
 
--- Rappel : SUPER + code:20/21 (« - » et « = » en US) tombent ici sur les touches )° et -_ ;
--- SUPER + ALT + code:34/35 (webcam) sur ^¨ et $* ; les workspaces (code:10-19) sont déjà corrects.
+-- Note: SUPER + code:20/21 ("-" and "=" on US) land on the )° and -_ keys here;
+-- SUPER + ALT + code:34/35 (webcam) on ^¨ and $*; workspaces (code:10-19) are already right.
 
 -- === Alt+Tab ======================================================================
--- Le comportement Omarchy est conservé : ALT + Tab / ALT + SHIFT + Tab cyclent les fenêtres
--- du workspace actif (hl.dsp.window.cycle_next) ; SUPER + ALT + Tab cycle dans un groupe ;
--- CTRL + ALT + Tab change d'écran. Rien à ajouter ici.
+-- Omarchy behaviour is kept: ALT + Tab / ALT + SHIFT + Tab cycle the windows of the active
+-- workspace (hl.dsp.window.cycle_next); SUPER + ALT + Tab cycles within a group;
+-- CTRL + ALT + Tab switches monitors. Nothing to add here.
 
--- === Exemples de personnalisation ==================================================
--- o.rebind("SUPER + SHIFT + O", "Joplin", "joplin-desktop")          -- remplacer un défaut
--- hl.unbind("SUPER + SHIFT + E")                                     -- retirer un défaut (HEY Email)
--- o.bind("SUPER + SHIFT + Z", "Zed", { launch = "zed" })             -- ajouter une appli
+-- === Customization examples =======================================================
+-- o.rebind("SUPER + SHIFT + O", "Joplin", "joplin-desktop")          -- replace a default
+-- hl.unbind("SUPER + SHIFT + E")                                     -- remove a default (HEY Email)
+-- o.bind("SUPER + SHIFT + Z", "Zed", { launch = "zed" })             -- add an application
