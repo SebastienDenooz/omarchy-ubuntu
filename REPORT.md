@@ -89,7 +89,7 @@ The kit is written for any Ubuntu 26.04 LTS machine, not for the ThinkPad it was
 
 | Setting | How it is decided |
 | --- | --- |
-| Ubuntu release | `require_ubuntu` in `lib.sh` stops below 26.04 LTS: Hyprland 0.56 needs Lua 5.5 and the shell a recent Qt 6, and 24.04 LTS ships neither (no `lua5.5`, Qt 6.4.2) |
+| Ubuntu release | `require_ubuntu` in `lib.sh` stops below 26.04 LTS: Hyprland 0.56 needs Lua 5.5 and the shell a recent Qt 6, and 24.04 LTS ships neither (no `lua5.5`, Qt 6.4.2); the danklinux PPA also publishes Quickshell for 26.04 but not for 24.04 |
 | Keyboard layout | read from `/etc/default/keyboard`, falling back to `/etc/vconsole.conf` then `us`; Omarchy alone reads only the latter, which a plain Ubuntu does not have |
 | AZERTY keycode fixes | added by `hypr/bindings.lua` only when that layout is `be` or `fr` |
 | Monitors | generic `preferred`/`auto`; fixed layouts live in `hypr/machines/<machine>/` and are applied by step 40 only when `/sys/class/dmi/id/product_name` or `product_family` matches the profile's `match` file; per-setup layouts are hyprmoncfg's job (step 55) |
