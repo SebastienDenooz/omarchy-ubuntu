@@ -40,7 +40,7 @@ fi
 say "Installing / upgrading the Hyprland stack"
 apt_install \
   hyprland hyprland-guiutils hyprland-protocols hyprwayland-scanner libhyprtoolkit6 \
-  hyprsunset hyprpicker hyprlock hypridle hyprpaper hyprpolkitagent hyprsysteminfo \
+  hyprsunset hyprpicker hyprlock hyprsysteminfo \
   xdg-desktop-portal-hyprland xdg-desktop-portal-gtk \
   uwsm xdg-terminal-exec lua5.5 liblua5.5-0
 # Quickshell: the kit accepts an already-built quickshell (e.g. from the Ubuntu-Hyprland installer).

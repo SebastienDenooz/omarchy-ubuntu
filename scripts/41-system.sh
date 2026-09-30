@@ -25,8 +25,17 @@ say "Fonts and fontconfig"
 sudo install -Dm644 "$OMARCHY_SYS/default/fonts/omarchy/omarchy.ttf" /usr/share/fonts/omarchy/omarchy.ttf
 sudo install -Dm644 "$OMARCHY_SYS/default/fontconfig/conf.avail/50-omarchy.conf" /usr/share/fontconfig/conf.avail/50-omarchy.conf
 sudo ln -sfn /usr/share/fontconfig/conf.avail/50-omarchy.conf /etc/fonts/conf.d/50-omarchy.conf
+# Chrome >= 154 bundles fontconfig 2.18.3 (cache format 12, Fontations): it symlinks *-le64.cache-{9,10,11} to its
+# cache-12 files, whose .woff/.woff2 entries have no family and no charset. fontconfig 2.17 accepts them, and
+# Qt 6.10 (upstream fix 80ddc8dee6 not picked to 6.10) crashes on the first glyph fallback. See REPORT.md §13.
+sudo install -Dm644 "$KIT_DIR/overrides/fontconfig/09-omarchy-reject-webfonts.conf" /usr/share/fontconfig/conf.avail/09-omarchy-reject-webfonts.conf
+sudo ln -sfn /usr/share/fontconfig/conf.avail/09-omarchy-reject-webfonts.conf /etc/fonts/conf.d/09-omarchy-reject-webfonts.conf
 sudo fc-cache -f >/dev/null
-ok "omarchy.ttf (shell glyphs), monospace → JetBrainsMono Nerd Font"
+# Drop Chrome's compat links so the user cache is rebuilt in Ubuntu's own format (Chrome recreates them; the rule
+# above is what keeps them harmless).
+find "$HOME/.cache/fontconfig" -maxdepth 1 -type l -name '*-le64.cache-*' -delete 2>/dev/null || true
+fc-cache >/dev/null 2>&1 || true
+ok "omarchy.ttf (shell glyphs), monospace → JetBrainsMono Nerd Font; WOFF/WOFF2 web-font containers rejected"
 
 say "Default terminal, input method, mimeapps"
 sudo install -Dm644 "$OMARCHY_SYS/default/xdg-terminal-exec/hyprland-xdg-terminals.list" /usr/share/xdg-terminal-exec/hyprland-xdg-terminals.list
@@ -45,6 +54,34 @@ sudo install -Dm644 "$OMARCHY_SYS/etc/systemd/logind.conf.d/20-inhibit-delay.con
 sudo install -Dm644 "$OMARCHY_SYS/etc/sysctl.d/90-omarchy-file-watchers.conf" /etc/sysctl.d/90-omarchy-file-watchers.conf
 (( IN_CONTAINER )) || sudo sysctl -q --system >/dev/null 2>&1 || true
 ok "power button → Omarchy menu; inotify 524288 (Omarchy's zram/swappiness sysctl is not carried over)"
+
+say "Global user units: nothing Hyprland-only in the GDM greeter"
+# PPA packages enable their units in /etc/systemd/user, which also applies to GDM's dynamic greeter users:
+# hyprpolkitagent segfaulted 5x per greeter start (root crash reports → apport dialogs), hyprsunset failed 5x.
+# A per-user mask never reaches the greeter. Omarchy runs none of these as units (the shell is the polkit agent
+# and draws the background; night light starts hyprsunset on demand).
+for u in hyprpolkitagent hyprpaper hyprsunset hypridle; do sudo systemctl --global disable "$u.service" >/dev/null 2>&1 || true; done
+# Masked even when absent: a later install of the package (a hyprland-* dependency) must not re-enable it.
+sudo systemctl --global mask hyprpolkitagent.service >/dev/null 2>&1 || true
+# The guard also covers the helpers above, should a package reinstall or a rollback enable them globally again.
+for u in fumon.service foot-server.service foot-server.socket app-com.mitchellh.ghostty.service \
+         hyprpolkitagent.service hyprpaper.service hyprsunset.service hypridle.service; do
+  sudo mkdir -p "/etc/systemd/user/$u.d"
+  printf '[Unit]\n# omarchy-ubuntu: enabled globally by its package; not in the GDM greeter\nConditionGroup=!gdm\n' | sudo tee "/etc/systemd/user/$u.d/10-omarchy-no-greeter.conf" >/dev/null
+done
+sudo sh -c 'rm -f /var/crash/_usr_libexec_hyprpolkitagent.*.crash'
+ok "hyprpolkitagent masked, hyprpaper/hyprsunset/hypridle disabled globally; greeter guard on fumon/foot/ghostty and the hypr helpers"
+
+say "Speaker tuning dependencies (laptops Omarchy ships a tuning for)"
+# Omarchy's first-run applies the speaker tuning; on a matching laptop it fails without the LV2 limiter, and a
+# failed first-run step makes first-run retry at every login.
+if OMARCHY_PATH="$OMARCHY_SYS" "$OMARCHY_SYS/bin/omarchy-audio-tuning" match >/dev/null 2>&1; then
+  # lsp-plugins-lv2: the limiter; libspa-0.2-modules-extra: PipeWire's LV2 filter-graph loader on Ubuntu.
+  apt_install lsp-plugins-lv2 libspa-0.2-modules-extra >/dev/null
+  ok "lsp-plugins-lv2 + libspa-0.2-modules-extra installed"
+else
+  skip "no speaker tuning for this machine"
+fi
 
 say "sudoers (automatic timezone, DNS from the menu)"
 # Ubuntu's sudo is built without regex rules: wildcard instead of Omarchy's regular expression.

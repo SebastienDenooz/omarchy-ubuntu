@@ -1,11 +1,19 @@
 #!/bin/bash
-# Ubuntu: reports a newer Omarchy release (git tag) and pending apt upgrades.
+# Ubuntu: reports a newer Omarchy release (git tag), pending apt upgrades and a pending reboot.
+# Same contract as upstream: prints what is pending and exits 0, or prints "Omarchy is up to date" and exits 1
+# (the bar's update icon and omarchy-update-status rely on the status).
 set -uo pipefail
 co=$(readlink -f "${OMARCHY_PATH:-/usr/share/omarchy}")
 GIT_TERMINAL_PROMPT=0 timeout 10 git -C "$co" fetch --quiet --tags origin 2>/dev/null || true
 current=$(git -C "$co" describe --tags --abbrev=0 2>/dev/null)
 latest=$(git -C "$co" tag -l 'v*' --sort=-v:refname | head -1)
-[[ -n $latest && $latest != "$current" ]] && echo "omarchy $latest (installed: $current)"
-n=$(apt list --upgradable 2>/dev/null | grep -c '/' || true)
-(( n > 0 )) && echo "apt: $n package(s) to upgrade"
-exit 0
+updates=()
+[[ -n $latest && $latest != "$current" ]] && updates+=("omarchy $latest (installed: $current)")
+# apt-get's simulation honours phased updates, unlike `apt list --upgradable`.
+n=$(apt-get -s -o Debug::NoLocking=1 upgrade 2>/dev/null | grep -c '^Inst ' || true)
+(( n > 0 )) && updates+=("apt: $n package(s) to upgrade")
+# update-notifier (which announces this on Ubuntu) does not run in Omarchy.
+[[ -f /run/reboot-required ]] && updates+=("reboot required to finish installing updates")
+if (( ${#updates[@]} )); then printf '%s\n' "${updates[@]}"; exit 0; fi
+echo "Omarchy is up to date"
+exit 1

@@ -33,6 +33,17 @@ fetch() { # fetch URL DESTINATION (skips files already fully downloaded)
 apt_install() { sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "$@"; }
 dpkg_present() { dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q 'install ok installed'; }
 
+# ~/.config entries step 40 backs up and replaces, and rollback restores.
+USER_CONFIG_PATHS=(hypr foot alacritty ghostty kitty btop tmux starship.toml lazygit omarchy fcitx5 imv obsidian opencode
+  xournalpp herdr chromium-flags.conf wireplumber hyprland-preview-share-picker autostart mimeapps.list xdg-terminals.list)
+user_unit_shipped() { # is a user unit installed by a package or the admin (every search path but ~/.config)
+  local d
+  for d in /etc/systemd/user /etc/xdg/systemd/user "$HOME/.local/share/systemd/user" /usr/local/share/systemd/user \
+           /usr/share/systemd/user /usr/local/lib/systemd/user /usr/lib/systemd/user; do
+    [[ -e $d/$1 ]] && return 0
+  done
+  return 1
+}
 user_systemctl() { # systemctl --user, only when a user manager is reachable
   if has_user_systemd; then systemctl --user "$@"; else skip "systemctl --user $*"; fi
 }

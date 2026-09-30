@@ -1,3 +1,6 @@
 #!/bin/bash
 # Ubuntu: Omarchy migrations are written for Arch (pacman, limine, snapper). Disabled.
+# --pending/--check answer "nothing pending" the way upstream does (no output, exit 1): omarchy-migrate-notify
+# stops on that status, whereas exit 0 would make it announce "0 pending migrations" at every login.
+case ${1:-} in --pending | --check) exit 1 ;; esac
 exit 0

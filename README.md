@@ -85,6 +85,7 @@ test/docker-test.sh            # fresh ubuntu:26.04 container, unprivileged sudo
 test/docker-test.sh --resume   # re-run in the same container (completed steps skipped)
 test/docker-test.sh --shell    # inspect
 test/docker-test.sh --rm       # clean up
+test/health.sh                 # inside the Omarchy session: login-path health check (no sudo, no changes)
 ```
 
 Inside a container the scripts detect the missing session and skip what needs one (systemd user units are
@@ -136,8 +137,12 @@ profile per setup and applies it on hotplug, lid and resume.
 - The hyprmoncfg plugin installs its backend from the AUR; on Ubuntu the kit builds it from source, and its "Install hyprmoncfg" button is routed to that build through the `omarchy-pkg-aur-add` override.
 - The shell's lock IPC can get stuck reporting the session as locked after an unlock, which silently disables locking; step 31 patches the lock service and `omarchy-system-lock` verifies the session really secured.
 - Omarchy's shell aliases live in bash by default; zsh users need `60-zsh.sh` (now automatic) or `ls` shows no icons.
-- `hyprpolkitagent.service` must be masked (globally enabled by the PPA), or the Omarchy shell's own polkit agent cannot register.
-- Leftover user units of a previous desktop (swaync, ydotoold…) are disabled, otherwise uwsm's fumon reports them at login; Fcitx's "Wayland diagnose" notice is hidden.
+- `hyprpolkitagent.service` must be masked, per user and globally (the PPA enables it for every user, GDM's greeter included), or the Omarchy shell's own polkit agent cannot register and the greeter crashes it at every start.
+- Leftover packaged units of a previous desktop (swaync, waybar, hyprpaper…) are masked, not just disabled, and a user D-Bus service file blocks the activation of other notification daemons; otherwise swaync takes the notification name whenever the shell restarts. Fcitx's "Wayland diagnose" notice is hidden.
+- Google Chrome ≥ 154 writes fontconfig caches that Ubuntu's fontconfig misreads, and Qt 6.10 then crashes on the first fallback glyph (Quickshell six times at login, no bar): step 41 installs a fontconfig rule rejecting WOFF/WOFF2 web-font containers.
+- Omarchy's first-run must be able to enable every unit it lists, and each of its steps must succeed, or it retries at every login and re-provisions the user (blank `~/.XCompose`): step 40 installs the unit list from the checkout, does the Ubuntu-safe parts of `omarchy finalize user` itself and marks it done; step 41 installs the speaker-tuning limiter where a tuning applies.
+- In Omarchy, uwsm starts every XDG autostart entry: blueman, nm-tray and update-notifier (apport dialogs) are masked there; GNOME still launches them.
+- Omarchy's passwordless default keyring (made for SDDM autologin) is not created: GDM unlocks Ubuntu's encrypted `login` keyring, and a passwordless default would store new secrets unencrypted, in GNOME too. One created by an earlier kit is left in place (Chrome's key lives there): give it a password in Passwords and Keys (seahorse).
 - Ubuntu's uwsm reads `uwsm/env`, not `env.d/`: script 41 installs `/etc/xdg/uwsm/env` (Omarchy env + `~/.local/bin` in PATH).
 
 ## Contents
@@ -149,8 +154,10 @@ MATRIX.md            the 150 Omarchy packages and their Ubuntu equivalent
 install.sh           one-shot, resumable installer
 scripts/             steps 00 → 90 (+ shared lib.sh)
 test/docker-test.sh  clean-container test of install.sh
+test/health.sh       login-path health check, run in the Omarchy session
 overrides/bin/       28 omarchy-* scripts rewritten for apt / no-op, plus the Ubuntu lock-screen PAM
 overrides/pkgmap.txt Arch → apt package name map
+overrides/fontconfig/ web-font reject rule (Chrome cache-12 vs Qt 6.10 crash)
 hypr/                generic monitors, input, bindings, looknfeel, autostart
 hypr/machines/       fixed layouts applied when the DMI identity matches (not tracked; see its README)
 themed/              theme templates adapted to Ubuntu (foot 1.25)

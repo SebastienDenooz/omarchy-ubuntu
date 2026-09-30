@@ -46,6 +46,22 @@ else
   ok "lock/Service.qml already fixed"
 fi
 
+say "First-run provisioning on Ubuntu"
+# Omarchy's first login runs omarchy-provision-user. On Ubuntu it aborted (set -e) on chromium.desktop, which does
+# not exist here (step 40 sets the browser), so first-run failed and re-ran at every login, blanking ~/.XCompose.
+f="$OMARCHY_CHECKOUT/bin/omarchy-provision-user"
+sed -i 's#^\(env -u BROWSER xdg-settings set default-web-browser chromium\.desktop\)$#\1 2>/dev/null || true#' "$f"
+# OMARCHY_USER_NAME/EMAIL come from Omarchy's Arch installer; fall back to the git identity instead of "".
+f="$OMARCHY_CHECKOUT/install/user/xcompose.sh"
+sed -i 's|: "\$OMARCHY_USER_NAME"$|: "${OMARCHY_USER_NAME:-$(git config --global user.name)}"|; s|: "\$OMARCHY_USER_EMAIL"$|: "${OMARCHY_USER_EMAIL:-$(git config --global user.email)}"|' "$f"
+ok "provision-user: browser step non-fatal; XCompose identity falls back to git"
+
+say "Shell launcher: say so on screen when it gives up"
+# Upstream only logs the give-up; without a bar, nothing on screen tells why the desktop looks empty.
+f="$OMARCHY_CHECKOUT/bin/omarchy-launch-shell"
+grep -q 'hyprctl notify' "$f" || sed -i '/logger -t omarchy-shell "Giving up on the Omarchy shell/a\    hyprctl notify 3 30000 0 "Omarchy shell keeps crashing: journalctl --user -t omarchy-shell, then omarchy-restart-shell" >/dev/null 2>\&1 || true' "$f"
+ok "omarchy-launch-shell: on-screen notice on give-up"
+
 say "Commit on the ubuntu branch"
 git -C "$OMARCHY_CHECKOUT" add -A
 git -C "$OMARCHY_CHECKOUT" -c user.name=omarchy-ubuntu -c user.email=kit@localhost commit -qm "Ubuntu overrides (omarchy-ubuntu kit)" || info "nothing to commit"
